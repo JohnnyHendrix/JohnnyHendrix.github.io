@@ -1,0 +1,102 @@
+<html>
+<head>
+	<script src="bower_components/requirejs/require.js"></script>
+
+	<script>
+		user_id = parseInt(Math.random() * Math.pow(2, 32));
+		
+		require.config({
+			paths: {
+				"influent": "bower_components/influent/dist/influent"
+			}
+		});
+
+		handleClick = function(cb)
+		{
+			alert("not ready");
+		}
+
+		require( ["influent"],			
+			function (influent) {
+				var p = document.createElement('p');
+				function display(msg) {
+					p.innerHTML = msg;
+					document.body.appendChild(p);
+				}
+
+				influent.createHttpClient({
+					server: [
+						{
+							protocol: "http",
+							host:   window.location.hostname ,
+							port:     8086
+						}
+					],
+					username: "root",
+					password: "root",
+					database: "training"
+				}).then(function(client) {
+
+						var batch;
+						
+						handleClick=function(cb)
+						{
+							if(cb.checked) {
+								batch = new influent.Batch({ database: "training", precission: "ms" });
+								window.addEventListener("deviceorientation", log_deviceorientation);
+								window.addEventListener("devicemotion", log_devicemotion);
+							} else {
+								window.removeEventListener("deviceorientation", log_deviceorientation);
+								window.removeEventListener("devicemotion", log_devicemotion);
+								client.write(batch).then(display("written"));
+								batch=0;
+							}
+						}
+						function log_devicemotion(event)
+						{
+							var m=new influent.Measurement(event.type)
+							m.setTimestamp(""+Date.now()*1000000);
+							m.addField("x", new influent.F64(event.accelerationIncludingGravity.x));
+							m.addField("y", new influent.F64(event.accelerationIncludingGravity.y));
+							m.addField("z", new influent.F64(event.accelerationIncludingGravity.z));
+							m.addTag("context", document.getElementById("context").value);
+							m.addTag("user_id", ""+user_id);
+							batch.add(m);
+							display(""+event.gamma);
+						}
+						function log_deviceorientation(event)
+						{
+							var m=new influent.Measurement(event.type)
+							m.setTimestamp(""+Date.now()*1000000);
+							m.addField("alpha", new influent.F64(event.alpha));
+							m.addField("beta", new influent.F64(event.beta));
+							m.addField("gamma", new influent.F64(event.gamma));
+							m.addTag("context", document.getElementById("context").value);
+							m.addTag("user_id", ""+user_id);
+							batch.add(m);
+							display(""+event.gamma);
+						}
+					}
+				);
+			}
+			);
+	</script>
+
+	<script type="text/javascript" charset="utf-8" async="" data-requirecontext="_" data-requiremodule="influent" src="./bower_components/influent/dist/influent.js"></script>
+</head>
+<body>
+	<!-- context -->
+	<label>
+		<select name="context" id="context">  
+			<option value="gehen">gehen</option>
+			<option value="stehen">stehen</option>
+			<option value="treppe">treppe</option>
+		</select>
+	</label>
+	<!-- switch -->
+	<label class="switch">
+		<input type="checkbox" onclick="handleClick(this);">
+		<div class="slider"></div>
+	</label>
+</body>
+</html>

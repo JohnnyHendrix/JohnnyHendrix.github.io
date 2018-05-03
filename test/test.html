@@ -1,0 +1,79 @@
+<html>
+<head>
+</head>
+<body>
+	<!-- context -->
+	<label>
+		<select name="context" id="context">  
+			<option value="gehen">gehen</option>
+			<option value="stehen">stehen</option>
+			<option value="treppe">treppe</option>
+		</select>
+	</label>
+	<button id="btnSendData">SEND</button>
+	<!-- switch -->
+	<label class="switch">
+		<input type="checkbox" onclick="handleClick(this);">
+		<div class="slider"></div>
+	</label>
+
+	<script src="https://www.gstatic.com/firebasejs/4.8.1/firebase.js"></script>
+	<script>
+		user_id = parseInt(Math.random() * Math.pow(2, 32));
+		// Initialize Firebase
+		var config = {
+			apiKey: "AIzaSyA9VknlIZbSdo53AoI1vFb_s03Rc9PC27A",
+			authDomain: "contextdata-69fa3.firebaseapp.com",
+			databaseURL: "https://contextdata-69fa3.firebaseio.com",
+			projectId: "contextdata-69fa3",
+			storageBucket: "",
+			messagingSenderId: "120131384317"
+		};
+
+		firebase.initializeApp(config);
+
+		function writeData(context, data) {
+	    	firebase.database().ref(context).push(data);
+
+		}
+
+		handleClick = function(cb)
+		{
+			if(cb.checked) {
+				window.addEventListener("deviceorientation", log_deviceorientation);
+				window.addEventListener("devicemotion", log_devicemotion);
+			} else {
+				window.removeEventListener("deviceorientation", log_deviceorientation);
+				window.removeEventListener("devicemotion", log_devicemotion);
+			}
+		}
+						
+		function log_devicemotion(event)
+		{
+			var data = {
+				"timestamp" : ""+Date.now()*1000000,
+				"user_id" : user_id,
+				"x" : event.accelerationIncludingGravity.x,
+				"y" : event.accelerationIncludingGravity.y,
+				"z" : event.accelerationIncludingGravity.z
+			};
+			var context = document.getElementById("context").value;
+			writeData(context, data);
+			display(""+event.gamma);
+		}
+		function log_deviceorientation(event)
+		{
+			var data = {
+				"timestamp" : ""+Date.now()*1000000,
+				"user_id" : user_id,
+				"alpha" : event.alpha,
+				"beta" : event.beta,
+				"gamma" : event.gamma
+			};
+			var context = document.getElementById("context").value;
+			writeData(context, data);
+			display(""+event.gamma);
+		}
+	</script>
+</body>
+</html>
